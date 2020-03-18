@@ -1,6 +1,13 @@
 """
-match
+match.py
+
+Takes as input csv files for students, mentors and questions and outputs (near)
+optimal groups.
+
+Written by Kenneth Huynh
 """
+# need to double check references here (does updating pair.student update student?)
+
 import csv
 import os
 
@@ -41,6 +48,10 @@ class Group:
         self.students = []
         self.mentor = None
 
+'''
+add_student creates a new Student object and adds it to the students array based
+on their responses
+'''
 def add_student(responses, students, id):
     new_student = Student(id)
     # add all the responses for each question into the new student's responses
@@ -58,7 +69,10 @@ def add_student(responses, students, id):
     # add new student to students
     students.append(new_student)
 
-
+'''
+add_mentor creates a new Mentor object and adds it to the mentors array based
+on their responses
+'''
 def add_mentor(responses, mentors, id):
     new_mentor = Mentor(id)
     # add all the responses for each question into the new mentor's responses
@@ -76,6 +90,9 @@ def add_mentor(responses, mentors, id):
     # add new mentor to mentors
     mentors.append(new_mentor)
 
+'''
+add_question creates a new Question object and adds it to the questions array 
+'''
 def add_question(row, questions):
     new_question = Question()
     new_question.n_responses = int(row[0])
@@ -83,6 +100,10 @@ def add_question(row, questions):
     
     questions.append(new_question)
 
+'''
+read_inputs reads in the input data and creates mentors, students and questions
+based off it
+'''
 def read_inputs(mentors, students, questions):
     # students
     student_id = 0
@@ -126,13 +147,19 @@ def read_inputs(mentors, students, questions):
                 add_question(row, questions)
                 line_count = line_count + 1
 
-
+'''
+generate_pairs creates all combinations of mentors and students
+'''
 def generate_pairs(students, mentors, pairs):
     for student in students:
         for mentor in mentors:
             new_pair = Pair(student, mentor)
             pairs.append(new_pair)
 
+'''
+calculate_pair_score calculates the score of each pair based off the matches 
+in their responses to the questions
+'''
 def calculate_pair_score(pair, questions):
     # iterate through questions
     for question_i in range(len(questions)):
@@ -145,13 +172,20 @@ def calculate_pair_score(pair, questions):
         # increment pair score
         pair.score = pair.score + matched_responses * questions[question_i].weight
 
+'''
+associate_pairs updates the pairs array associated with each student from the 
+global pairs array
+'''
 def associate_pairs(pairs, students):
     for student in students:
         for pair in pairs:
             if pair.student == student:
                 student.pairs.append(pair)
 
-# need to double check references here (does updating pair.student update student?)
+'''
+generate_groups generates (as close to) optimal groups (as possible) based off
+the pairs
+'''
 def generate_groups(groups, students):
     # iterate for the number of students in each group
     for n_students_in_group in range(Group.MAX_STUDENTS):
@@ -192,6 +226,9 @@ def generate_groups(groups, students):
 
                             pair.student.inGroup = True
 
+'''
+output_groups takes the generated groups and outputs it into a csv file
+'''
 def output_groups(groups):
     with open(os.path.join(TEST_FOLDER,'groups.csv'), mode='w') as groups_file:
         groups_writer = csv.writer(groups_file, delimiter=',')
